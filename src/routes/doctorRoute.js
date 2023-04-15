@@ -3,7 +3,7 @@ const router = express.Router();
 
 const {
     registerDoctor,
-    // loginUser,
+    loginDoctor,
     // forgotPassword,
     // resetPassword,
     // getUserProfile,
@@ -22,7 +22,7 @@ const { isAuthenticatedUser, authorizeRoles } = require('../middlewares/auth')
 router.route('/admin/doctors').get(allDoctors)
 router.route('/doctor/register').post(registerDoctor);
 
-// router.route('/login').post(loginUser);
+router.route('/login/doctor').post(loginDoctor);
 
 // router.route('/password/forgot').post(forgotPassword)
 // router.route('/password/reset/:token').put(resetPassword)
