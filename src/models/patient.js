@@ -25,7 +25,7 @@ const patientSchema = new mongoose.Schema({
         validate: {
             validator: function (v) {
                 return /^[0-9]{11}$/.test(v);
-            }, message: 'Kindly Provide valid Phone Number'
+            }, message: 'Kindly Provide valid Personal Phone Number'
         }
     },
     emergencyNumber: {
@@ -34,9 +34,8 @@ const patientSchema = new mongoose.Schema({
         unique: false,
         validate: {
             validator: function (v) {
-                return /^[0-9]{10}$/.test(v);
-            }, message: 'Kindly Provide valid Phone Number'
-            // message: props => `${props.value} is not a valid phone number!`
+                return /^[0-9]{11}$/.test(v);
+            }, message: 'Kindly Provide valid Personal Phone Number'
         }
     },
     smoker: {
