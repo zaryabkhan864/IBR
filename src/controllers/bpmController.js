@@ -2,74 +2,80 @@ const ErrorHandler = require('../utils/errorHandler');
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
 const APIFeatures = require('../utils/apiFeatures')
 const tf = require('@tensorflow/tfjs-node');
-const XLSX = require('xlsx');
 const bodyParser = require('body-parser');
 const path = require('path');
+const xlsx = require('xlsx');
+const fs = require('fs');
 
-const workbook = XLSX.readFile(path.join(__dirname, '../dataset/testing.xlsx'));
-const worksheet = workbook.Sheets['Sheet1'];
-let data = XLSX.utils.sheet_to_json(worksheet);
-
-// Split the data into training and testing sets
-const splitIndex = Math.round(data.length * 0.8);
-const trainingData = data.slice(0, splitIndex);
-console.log(`traning data`, trainingData)
-const testingData = data.slice(splitIndex);
-
-// Define the model architecture
+//importing excel file
+const workbook = xlsx.readFile(path.join(__dirname, '../dataset/data.xlsx'));
+const sheet_name_list = workbook.SheetNames;
+const xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+const data = xlData.map((item) => {
+    return [
+        item.age,
+        item.sex,
+        item.Weight,
+        item.HR
+    ]
+})
+const labels = xlData.map((item) => {
+    return [
+        item.heartAttackRisk
+    ]
+})
+const trainingData = tf.tensor2d(data);
+const outputData = tf.tensor2d(labels);
 const model = tf.sequential();
-
-model.add(tf.layers.dense({ inputShape: [10], units: 16, activation: 'relu' }));
-model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
-model.compile({ optimizer: 'adam', loss: 'binaryCrossentropy', metrics: ['accuracy'] });
-
-// Convert the training data to tensors
-const trainingInputs = tf.tensor(trainingData.map(d => [d.age, d.sex === 'male' ? 0 : 1, d.cp, d.Weight, d.HR, d.BP, d.Smoker, d.FamilyHistory, d.HeartDisease, d.HeartAttackHistory]));
-const trainingLabels = tf.tensor(trainingData.map(d => d.HeartAttack));
-console.log(`lable data print`, trainingLabels);
-
-// Train the model
-
-model.fit(trainingInputs, trainingLabels, { epochs: 50 }).then(() => {
-    console.log('Model trained');
+model.add(tf.layers.dense({
+    inputShape: [4],
+    activation: 'sigmoid',
+    units: 5
+}));
+model.add(tf.layers.dense({
+    activation: 'sigmoid',
+    units: 1
+}));
+model.compile({
+    loss: 'meanSquaredError',
+    optimizer: tf.train.adam(0.06)
 });
+async function trainModel() {
+    return await model.fit(trainingData, outputData, {
+        epochs: 10,
+        shuffle: true,
+        callbacks: tf.node.tensorBoard(path.join(__dirname, '../logs'))
+    });
+}
 
-// exports.getPredict = catchAsyncErrors(async (req, res, next) => {
-//     const { age, sex, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory } = req.body;
-//     console.log(`what is inside req body`, req.body);
-//     const input = tf.tensor([[age, sex === 'male' ? 1 : 0, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory]]);
-//     console.log('the input values are :', input);
-//     const prediction = model.predict(input);
-//     const output = prediction.arraySync()[0][0];
-//     const probability = Math.round(output * 100);
-//     console.log(`prediction value`, probability)
-//     res.json({ probability });
-// })
-// exports.getPredict = catchAsyncErrors(async (req, res, next) => {
-//     const { age, sex, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory } = req.body;
-//     const input = tf.tensor([[age, sex === 'male' ? 1 : 0, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory]]);
-//     const prediction = model.predict(input).dataSync()[0];
-//     res.json({ prediction: `${Math.round(prediction * 100)}%` });
-// })
 exports.getPredict = catchAsyncErrors(async (req, res, next) => {
-    const { age, sex, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory } = req.body;
+    const { age, sex, Weight, HR, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory } = req.body;
     console.log(`what is inside req body`, req.body);
-    const input = tf.tensor([[age, sex === 'male' ? 1 : 0, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory]]);
+    const input = tf.tensor([[age, sex, Weight, HR]]);
     console.log('the input values are :', input);
     const prediction = model.predict(input);
     const predictionData = prediction.dataSync()[0];
-    const predictionPercentage = Math.round(predictionData * 100);
-    res.json({ prediction: predictionPercentage });
+    console.log('the prediction is :', predictionData);
+    const percentage = predictionData * 100;
+     let _smoker = 0;
+     let _FamilyHistory = 0;
+     let _HeartDisease = 0;
+     let _HeartAttackHistory = 0;
+
+    if (Smoker == 1) {
+        _smoker = percentage * 0.25;
+        console.log('the smoker is :', _smoker);
+    }
+    if (FamilyHistory == 1) {
+        _FamilyHistory = percentage * 0.13;
+    }
+    if (HeartDisease == 1) {
+        _HeartDisease = percentage * 0.07;
+    }
+    if (HeartAttackHistory == 1) {
+        _HeartAttackHistory = percentage * 0.05;
+    }
+    let result = percentage + _smoker + _FamilyHistory + _HeartDisease + _HeartAttackHistory;
+    console.log('the percentage is :', result);
+    res.json({ prediction: result });
 })
-// exports.getPredict = catchAsyncErrors(async (req, res, next) => {
-//     const { age, sex, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory } = req.body;
-//     console.log(`what is inside req body`, req.body);
-//     const input = tf.tensor([[age, sex === 'male' ? 1 : 0, cp, Weight, HR, BP, Smoker, FamilyHistory, HeartDisease, HeartAttackHistory]]);
-//     console.log('the input values are :', input);
-//     const prediction = model.predict(input);
-//     const output = prediction.arraySync()[0][0] * 100;
-//     console.log(`prediction value in percentage`, output);
-//     res.json({ prediction: output });
-// })
-
-
