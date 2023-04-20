@@ -1,5 +1,5 @@
 const Doctor = require('../models/doctor');
-
+const Patient = require('../models/patient');
 const ErrorHandler = require('../utils/errorHandler');
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
 const sendToken = require('../utils/jwtToken');
@@ -83,4 +83,21 @@ exports.loginDoctor = catchAsyncErrors(async (req, res, next) => {
     }
 
     sendToken(doctor, 200, res)
+})
+// Login addPatient  =>  /api/v1/addPatient
+exports.addPatient = catchAsyncErrors(async (req, res, next) => {
+
+    let patient = await Patient.findOne({ email: req.body.email });
+    if (!patient) return res.status(400).send('Invalid patient email.');
+    console.log(`req.user._id`, req.user)
+    // write update logic here
+    patient = await Patient.updateOne({ email: req.body.email }, {
+        $set: { doctor: req.user._id }
+    })
+
+    res.status(200).json({
+        success: true,
+        message: 'Patient added successfully',
+        patient
+    })
 })

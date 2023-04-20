@@ -11,6 +11,7 @@ const {
     // updateProfile,
     // logout,
     allDoctors,
+    addPatient
     // getUserDetails,
     // updateUser,
     // deleteUser
@@ -23,7 +24,7 @@ router.route('/admin/doctors').get(allDoctors)
 router.route('/doctor/register').post(registerDoctor);
 
 router.route('/login/doctor').post(loginDoctor);
-
+router.route('/doctor/addpatient').post(addPatient);
 // router.route('/password/forgot').post(forgotPassword)
 // router.route('/password/reset/:token').put(resetPassword)
 

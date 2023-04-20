@@ -18,6 +18,18 @@ const patientSchema = new mongoose.Schema({
         type: Number,
         required: [false, 'Please enter your Weight']
     },
+    sex: {
+        type: Number,
+        required: [false, 'Please enter your Sex']
+    },
+    familyHistory: {
+        type: Number,
+        required: [false, 'Please enter your family history']
+    },
+    heartAttackHistory: {
+        type: Number,
+        required: [false, 'Please enter your heart attack history']
+    },
     personalNumber: {
         type: String,
         required: false,
@@ -79,6 +91,11 @@ const patientSchema = new mongoose.Schema({
         required: [false, 'Please enter your password'],
         minlength: [6, 'Your password must be longer than 6 characters'],
         select: false
+    },
+    doctor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'doctor',
+        required: false
     },
     avatar: {
         public_id: {
