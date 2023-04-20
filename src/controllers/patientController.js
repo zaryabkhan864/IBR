@@ -22,21 +22,22 @@ exports.registerPatient = catchAsyncErrors(async (req, res, next) => {
         age,
         weight,
         sex,
+        familyHistory,
         heartAttackHistory,
         personalNumber,
         emergencyNumber,
         smoker,
-        familyHistory,
         heartDisease,
         email,
         password
     } = req.body;
-
+    console.log(req.body)
     const patient = await Patient.create({
         name,
         age,
         weight,
         sex,
+        familyHistory,
         heartAttackHistory,
         personalNumber,
         emergencyNumber,

@@ -24,7 +24,7 @@ const patientSchema = new mongoose.Schema({
     },
     familyHistory: {
         type: Number,
-        required: [false, 'Please enter your family history']
+        required: [false, 'Please enter your Family History']
     },
     heartAttackHistory: {
         type: Number,
@@ -60,16 +60,7 @@ const patientSchema = new mongoose.Schema({
             message: 'Gender must be either 0 or 1'
         }
     },
-    familyHistory: {
-        type: Number,
-        required: [false, 'Please provide data that someone has heart disease in your family'],
-        validate: {
-            validator: function (v) {
-                return v === 0 || v === 1;
-            },
-            message: 'Gender must be either 0 or 1'
-        }
-    },
+
     heartDisease: {
         type: Number,
         required: [false, 'Please provide data that do you have disease'],
